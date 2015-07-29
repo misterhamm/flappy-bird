@@ -1,22 +1,41 @@
 var GraphicsSystem = function(entities) {
     this.entities = entities;
+    // Canvas is where we draw
+    this.canvas = document.getElementById('main-canvas');
+    // Context is what we draw
+    this.context = this.canvas.getContext('2d');
 };
 
 GraphicsSystem.prototype.run = function() {
-    //Tick the graphics system a few times to see it in action
-    for (var i=0; i<5; i++) {
-        this.tick();
-    }
+    // Run the render loop
+    window.requestAnimationFrame(this.tick.bind(this));
 };
 
 GraphicsSystem.prototype.tick = function() {
+    console.log("I'm an IDE not a doctor, dammit.")
+    
+    // Set the canvas to the correct size if the window is resized
+    if (this.canvas.width != this.canvas.offsetWidth ||
+        this.canvas.height != this.canvas.offsetHeight) {
+        this.canvas.width = this.canvas.offsetWidth; 
+        this.canvas.height = this.canvas.offsetHeight;
+    }
+    
+    // Clear the Canvas
+    this.context.clearRect(0, 0, this.canvas.width, this.canvas.height);
+    
+    // Rendering goes here
     for (var i=0; i<this.entities.length; i++) {
         var entity = this.entities[i];
         if (!'graphics' in entity.components) {
             continue;
         }
-        entity.components.graphics.draw(this.context);
+    entity.components.graphics.draw(this.context);
     }
+    
+    // Continue the render loop
+    window.requestAnimationFrame(this.tick.bind(this));
+    
 };
 
 exports.GraphicsSystem = GraphicsSystem;

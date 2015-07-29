@@ -8,6 +8,7 @@ var rename = require('gulp-rename');
 var source = require('vinyl-source-stream');
 var buffer = require('vinyl-buffer');
 var util = require('gulp-util');
+var browserSync = require('browser-sync').create();
 
 //Javascript linting task
 gulp.task('jshint', function() {
@@ -19,8 +20,17 @@ gulp.task('jshint', function() {
 //Watch Task
 gulp.task('watch', function() {
     gulp.watch('js/*.js', ['jshint']);
-    gulp.watch('scss/*.scss', ['sass']);
     gulp.watch('css/*.css', ['css']);
+});
+
+// Static Server + watching scss/html files
+gulp.task('serve', ['scripts'], function() {
+    browserSync.init({
+        server: "./"
+    });
+    gulp.watch("./build/app.js").on('change', browserSync.reload);
+    gulp.watch("./css/*.css").on('change', browserSync.reload);
+    gulp.watch("./*.html").on('change', browserSync.reload);
 });
 
 //JavaScript build task, removes whitespace and concatenates files
@@ -40,29 +50,13 @@ gulp.task('browserify', function() {
         .pipe(gulp.dest('./build/'));
 });
 
-/*gulp.task('entities', function() {
-    return gulp.src('js/entities/*.js')
-        .pipe(concat('entities.js'))
-        .pipe(uglify())
-        .pipe(gulp.dest('build/js'));
-});
 
-gulp.task('components', function() {
-    return gulp.src('js/components/graphics/*.js')
-        .pipe(concat('components.js'))
-        .pipe(uglify())
-        .pipe(gulp.dest('build/js'));
-});
-
-gulp.task('systems', function() {
-    return gulp.src('js/systems/*.js')
-        .pipe(concat('systems.js'))
-        .pipe(uglify().on('error', util.log))
-        .pipe(gulp.dest('build/js'));
-});*/
 
 //Default Task
 gulp.task('default', ['jshint', 'watch']);
           
 //Build Task
-gulp.task('build', ['jshint', 'scripts', 'browserify'/*'entities', 'components', 'systems'*/]);
+gulp.task('build', ['jshint', 'scripts', 'browserify']);
+
+//Build and Browser-Sync
+gulp.task('display', ['jshint', 'scripts', 'browserify', 'serve']);

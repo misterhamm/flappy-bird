@@ -3,8 +3,44 @@ var BirdGraphicsComponent = function(entity) {
     this.entity = entity;
 };
 
-BirdGraphicsComponent.prototype.draw = function() {
-    console.log("Drawing a bird");
+BirdGraphicsComponent.prototype.draw = function(context) {
+    console.log("Drawing a Bird");
+    //Circle
+    context.beginPath();
+    context.fillStyle = "green";
+    context.arc(200, 300, 50, 0, 2 * Math.PI);
+    context.fill();
+
+    //Rectangle
+    context.beginPath();
+    context.fillStyle = "blue";
+    context.rect(10, 50, 50, 25);
+    context.fill();
+
+    //Line
+    context.beginPath();
+    context.strokeStyle = "orange";
+    context.lineCap = "round";
+	context.moveTo(0,100);
+	context.lineWidth = 2;
+	context.lineTo(100, 60);
+	context.stroke();
+
+	//Triangle
+	context.beginPath();
+	context.strokeStyle = "purple";
+	context.moveTo(100, 100);
+	context.lineTo(200, 100);
+	context.lineTo(150, 150);
+	context.closePath();
+	context.stroke();
+
+    //Text
+    context.beginPath();
+    context.fillStyle = "red";
+    context.fillText("Circle 200, 300, 50", 10, 10);
+    context.fillText("Rectangle 10, 50, 50, 25", 10, 20);
+    context.fill();
 };
 
 exports.BirdGraphicsComponent = BirdGraphicsComponent;
@@ -45,24 +81,42 @@ document.addEventListener('DOMContentLoaded', function() {
 },{"./flappy_bird":3}],5:[function(require,module,exports){
 var GraphicsSystem = function(entities) {
     this.entities = entities;
+    // Canvas is where we draw
+    this.canvas = document.getElementById('main-canvas');
+    // Context is what we draw
+    this.context = this.canvas.getContext('2d');
 };
 
 GraphicsSystem.prototype.run = function() {
-    //Tick the graphics system a few times to see it in action
-    for (var i=0; i<5; i++) {
-        this.tick();
-    }
+    // Run the render loop
+    window.requestAnimationFrame(this.tick.bind(this));
 };
 
 GraphicsSystem.prototype.tick = function() {
+    console.log("I'm an IDE not a doctor, dammit.")
+    
+    // Set the canvas to the correct size if the window is resized
+    if (this.canvas.width != this.canvas.offsetWidth ||
+        this.canvas.height != this.canvas.offsetHeight) {
+        this.canvas.width = this.canvas.offsetWidth; 
+        this.canvas.height = this.canvas.offsetHeight;
+    }
+    
+    // Clear the Canvas
+    this.context.clearRect(0, 0, this.canvas.width, this.canvas.height);
+    
+    // Rendering goes here
     for (var i=0; i<this.entities.length; i++) {
         var entity = this.entities[i];
         if (!'graphics' in entity.components) {
             continue;
         }
-        
-        entity.components.graphics.draw(this.context);
+    entity.components.graphics.draw(this.context);
     }
+    
+    // Continue the render loop
+    window.requestAnimationFrame(this.tick.bind(this));
+    
 };
 
 exports.GraphicsSystem = GraphicsSystem;
