@@ -16,7 +16,7 @@ GraphicsSystem.prototype.tick = function() {
     // Set the canvas to the correct size if the window is resized
     if (this.canvas.width != this.canvas.offsetWidth ||
         this.canvas.height != this.canvas.offsetHeight) {
-        this.canvas.width = this.canvas.offsetWidth; 
+        this.canvas.width  = this.canvas.offsetWidth; 
         this.canvas.height = this.canvas.offsetHeight;
     }
     

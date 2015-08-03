@@ -19,22 +19,33 @@ BirdGraphicsComponent.prototype.draw = function(context) {
 
 exports.BirdGraphicsComponent = BirdGraphicsComponent;
 },{}],2:[function(require,module,exports){
-var PipeGraphicsComponent = function(entity) {
+var PipeGraphicsComponent = function(entity, size) {
     this.entity = entity;
+    this.size = size;
+    console.log(this.size);
 };
 
 PipeGraphicsComponent.prototype.draw = function(context) {
 
-	console.log("pipe");
-
 	var position = this.entity.components.physics.position;
 
+	
 	context.save();
 	context.translate(position.x, position.y);
+
+	// Bottom Pipe
+	/*context.beginPath();
+	context.rect(0, -0.1, 0.2, 0.5); // (left position, top position, width, height)
+	context.fill();
+	context.closePath();*/
+
+	//Top Pipe
 	context.beginPath();
-	context.rect(0, 0, 0.2, 0.5);
+	context.fillStyle = "green";
+	context.rect(-this.size.x / 2, -this.size.y / 2, 0.2, 0.5 /*this.size.x, this.size.y*/); // (left position, top position, width, height)
 	context.fill();
 	context.closePath();
+	
 	context.restore();
 	
 };
@@ -92,10 +103,10 @@ var graphicsComponent = require("../components/graphics/pipes");
 var physicsComponent = require('../components/physics/physics');
 
 
-var Pipe = function() {
+var PipeBottom = function() {
     var physics = new physicsComponent.PhysicsComponent(this);
-    physics.position.x = 1;
-    physics.acceleration.x = -0.5;
+	physics.position.x     = 1;
+	physics.acceleration.x = -0.1;
 
     var graphics = new graphicsComponent.PipeGraphicsComponent(this);
     this.components = {
@@ -104,37 +115,64 @@ var Pipe = function() {
     }
 };
 
-exports.Pipe = Pipe;
+exports.Pipe = PipeBottom;
 },{"../components/graphics/pipes":2,"../components/physics/physics":3}],6:[function(require,module,exports){
+var graphicsComponent = require("../components/graphics/pipes");
+var physicsComponent = require('../components/physics/physics');
+
+
+var Pipe = function(position, size) {
+    var physics = new physicsComponent.PhysicsComponent(this);
+	physics.position = position;
+    console.log(physics.position);
+	physics.acceleration.x = -0.1;
+
+    var graphics = new graphicsComponent.PipeGraphicsComponent(this, size);
+    this.components = {
+    	physics: physics,
+        graphics: graphics
+    }
+};
+
+exports.Pipe = Pipe;
+},{"../components/graphics/pipes":2,"../components/physics/physics":3}],7:[function(require,module,exports){
 var graphicsSystem = require('./systems/graphics');
-var physicsSystem = require('./systems/physics');
-var inputSystem = require('./systems/input');
+var physicsSystem  = require('./systems/physics');
+var inputSystem    = require('./systems/input');
+var pipeSystem     = require('./systems/pipeRepeat');
 
 var bird = require('./entities/bird');
 var pipe = require('./entities/pipe');
+var pipebottom = require('./entities/pipe-bottom');
+
 
 var FlappyBird = function() {
-    this.entities = [new bird.Bird(), new pipe.Pipe()];
-    this.graphics = new graphicsSystem.GraphicsSystem(this.entities);
-    this.physics = new physicsSystem.PhysicsSystem(this.entities);
-    this.input = new inputSystem.InputSystem(this.entities);
+	this.entities = [new bird.Bird()];
+	this.graphics = new graphicsSystem.GraphicsSystem(this.entities);
+	this.physics  = new physicsSystem.PhysicsSystem(this.entities);
+	this.input    = new inputSystem.InputSystem(this.entities);
+    this.pipeRepeat = new pipeSystem.PipeRepeatSystem(this.entities);
 };
 
 FlappyBird.prototype.run = function() {
     this.graphics.run();
     this.physics.run();
     this.input.run();
+    this.pipeRepeat.run();
 };
 
 exports.FlappyBird = FlappyBird;
-},{"./entities/bird":4,"./entities/pipe":5,"./systems/graphics":8,"./systems/input":9,"./systems/physics":10}],7:[function(require,module,exports){
+
+
+
+},{"./entities/bird":4,"./entities/pipe":6,"./entities/pipe-bottom":5,"./systems/graphics":9,"./systems/input":10,"./systems/physics":11,"./systems/pipeRepeat":12}],8:[function(require,module,exports){
 var flappyBird = require('./flappy_bird');
 
 document.addEventListener('DOMContentLoaded', function() {
     var app = new flappyBird.FlappyBird();
     app.run();
 });
-},{"./flappy_bird":6}],8:[function(require,module,exports){
+},{"./flappy_bird":7}],9:[function(require,module,exports){
 var GraphicsSystem = function(entities) {
     this.entities = entities;
     // Canvas is where we draw
@@ -153,7 +191,7 @@ GraphicsSystem.prototype.tick = function() {
     // Set the canvas to the correct size if the window is resized
     if (this.canvas.width != this.canvas.offsetWidth ||
         this.canvas.height != this.canvas.offsetHeight) {
-        this.canvas.width = this.canvas.offsetWidth; 
+        this.canvas.width  = this.canvas.offsetWidth; 
         this.canvas.height = this.canvas.offsetHeight;
     }
     
@@ -181,7 +219,7 @@ GraphicsSystem.prototype.tick = function() {
 };
 
 exports.GraphicsSystem = GraphicsSystem;
-},{}],9:[function(require,module,exports){
+},{}],10:[function(require,module,exports){
 var InputSystem = function(entities) {
 	this.entities = entities;
 
@@ -191,7 +229,7 @@ var InputSystem = function(entities) {
 
 InputSystem.prototype.run = function() {
 	this.canvas.addEventListener('click', this.onClick.bind(this));
-	this.canvas.addEventListener('touchstart', this.changedTouches.bind(this));
+	/*this.canvas.addEventListener('touchstart', this.changedTouches.bind(this));*/
 };
 
 InputSystem.prototype.onClick = function() {
@@ -200,7 +238,7 @@ InputSystem.prototype.onClick = function() {
 };
 
 exports.InputSystem = InputSystem;
-},{}],10:[function(require,module,exports){
+},{}],11:[function(require,module,exports){
 var PhysicsSystem = function(entities) {
 	this.entities = entities;
 };
@@ -221,4 +259,47 @@ PhysicsSystem.prototype.tick = function() {
 };
 
 exports.PhysicsSystem = PhysicsSystem;
-},{}]},{},[7]);
+},{}],12:[function(require,module,exports){
+var pipe = require('../entities/pipe');
+
+var PipeRepeatSystem = function(entities) {
+	this.entities = entities;
+};
+
+
+PipeRepeatSystem.prototype.run =  function() {
+	// Run the update loop
+	window.setInterval(this.tick.bind(this), 2000);
+};
+
+PipeRepeatSystem.prototype.tick = function() {
+       
+    var width = 0.2;//alter
+    var height = 1;
+    var size = {
+        x: width,
+        y: height
+    };
+    var position = {
+        x: 1,//cannot see what this alters
+        y: 5 // doesn't seem to change anything
+    };
+    
+    this.entities.push(new pipe.Pipe(position, size)); //top
+    
+    var width = 1;// x position off canvas
+    var height = Math.random() * -1; //flips y position of pipe when presented with a negative integer.
+    var size = {
+        x: width,
+        y: height
+    };
+    var position = {
+        x: 1.7, // x position off of canvas must stay hard coded.
+        y: 0.5  // Do not increase positively, will raise bottom of pipe away from canvas edge.
+    };
+    
+    this.entities.push(new pipe.Pipe(position, size));//bottom
+};
+
+exports.PipeRepeatSystem = PipeRepeatSystem;
+},{"../entities/pipe":6}]},{},[8]);
